@@ -1,17 +1,14 @@
 package models
 
+type SoilType = SoilTypeInfo
+
+// Below is the structure of the JSON from the weather API.
+// It is only the sub-structure of the data.
+// This way, we only get what we need when unmarshalling the JSON.
+
 type SoilTypeJSON struct {
-	// The feature type of the geojson-object
-	Type interface{} `json:"type"`
-	// The geometry of the queried location
-	Geometry PointGeometry `json:"geometry"`
 	// The soil type information at the queried location
 	Properties SoilTypeInfo `json:"properties"`
-}
-
-type PointGeometry struct {
-	// [longitude, latitude] decimal coordinates
-	Coordinates []float32 `json:"coordinates"`
 }
 
 type SoilTypeInfo struct {
