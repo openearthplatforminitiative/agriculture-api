@@ -12,9 +12,10 @@ spec:
     metadata:
       labels:
         app: agriculture-api
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "8080"
+#      annotations:
+#        prometheus.io/scrape: "true"
+#        prometheus.io/port: "8080"
+#        prometheus.io/path: "/metrics"
     spec:
       containers:
         - image: ghcr.io/openearthplatforminitiative/agriculture-api:latest
@@ -62,7 +63,7 @@ spec:
     - websecure
   routes:
     - kind: Rule
-      match: PathPrefix(`/agriculture`)
+      match: PathPrefix(`/agriculture`) && !PathPrefix(`/agriculture/metrics`)
       services:
         - kind: Service
           name: agriculture-api
