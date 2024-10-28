@@ -3,7 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
-	"github.com/openearthplatforminitiative/agriculture-api/internal/config"
+	"github.com/openearthplatforminitiative/agriculture-api/config"
 	"github.com/openearthplatforminitiative/agriculture-api/models"
 	"io"
 	"log"

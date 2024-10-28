@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/openearthplatforminitiative/agriculture-api/internal/config"
-	"github.com/openearthplatforminitiative/agriculture-api/internal/routes"
+	"github.com/openearthplatforminitiative/agriculture-api/config"
+	"github.com/openearthplatforminitiative/agriculture-api/routes"
 	"log"
 )
 
