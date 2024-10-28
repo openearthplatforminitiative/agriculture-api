@@ -12,6 +12,7 @@ type Config struct {
 	ApiRootPath    string
 	ApiDescription string
 	ApiDomain      string
+	ApiBaseUrl     string
 }
 
 func (c *Config) GetServerBindAddress() string {
@@ -47,5 +48,6 @@ func Setup() {
 		ServerBindPort: getEnvInt("SERVER_BIND_PORT", 8080),
 		ServerBindHost: getEnv("SERVER_BIND_HOST", "127.0.0.1"),
 		ApiRootPath:    getEnv("API_ROOT_PATH", ""),
+		ApiBaseUrl:     getEnv("API_BASE_URL", "https://api.openepi.io"),
 	}
 }
