@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/openearthplatforminitiative/agriculture-api/internal/config"
 	"github.com/openearthplatforminitiative/agriculture-api/models"
 	"io"
 	"log"
@@ -24,10 +25,10 @@ func Summary(c *gin.Context) (summary models.Summary) {
 	floodChan := make(chan []byte)
 	deforestationChan := make(chan []byte)
 
-	go func() { soilChan <- getData(params, "soil/type") }()
-	go func() { weatherChan <- getData(params, "weather/locationforecast") }()
-	go func() { floodChan <- getData(params, "flood/summary") }()
-	go func() { deforestationChan <- getData(params, "deforestation/basin") }()
+	go func() { soilChan <- getData(params, "/soil/type") }()
+	go func() { weatherChan <- getData(params, "/weather/locationforecast") }()
+	go func() { floodChan <- getData(params, "/flood/summary") }()
+	go func() { deforestationChan <- getData(params, "/deforestation/basin") }()
 
 	soilData := <-soilChan
 	weatherData := <-weatherChan
@@ -38,7 +39,20 @@ func Summary(c *gin.Context) (summary models.Summary) {
 }
 
 func getData(params url.Values, endpoint string) (body []byte) {
-	resp, err := http.Get("https://api.openepi.io/" + endpoint + "?lat=" + params.Get("lat") + "&lon=" + params.Get("lon"))
+	base, err := url.Parse(config.AppSettings.ApiBaseUrl)
+	if err != nil {
+		log.Println("Failed to parse base URL")
+		return
+	}
+
+	base.Path += endpoint
+
+	p := url.Values{}
+	p.Set("lat", params.Get("lat"))
+	p.Set("lon", params.Get("lon"))
+	base.RawQuery = p.Encode()
+
+	resp, err := http.Get(base.String())
 	if err != nil {
 		log.Println("Failed to fetch data")
 		return
