@@ -12,10 +12,21 @@ import (
 
 func Summary(c *gin.Context) (summary models.Summary) {
 	params := c.Request.URL.Query()
-	soilData := getData(params, "soil/type")
-	weatherData := getData(params, "weather/locationforecast")
-	floodData := getData(params, "flood/summary")
-	deforestationData := getData(params, "deforestation/basin")
+
+	soilChan := make(chan []byte)
+	weatherChan := make(chan []byte)
+	floodChan := make(chan []byte)
+	deforestationChan := make(chan []byte)
+
+	go func() { soilChan <- getData(params, "soil/type") }()
+	go func() { weatherChan <- getData(params, "weather/locationforecast") }()
+	go func() { floodChan <- getData(params, "flood/summary") }()
+	go func() { deforestationChan <- getData(params, "deforestation/basin") }()
+
+	soilData := <-soilChan
+	weatherData := <-weatherChan
+	floodData := <-floodChan
+	deforestationData := <-deforestationChan
 
 	return createSummary(soilData, weatherData, floodData, deforestationData)
 }
