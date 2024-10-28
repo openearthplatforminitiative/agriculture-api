@@ -13,6 +13,12 @@ import (
 func Summary(c *gin.Context) (summary models.Summary) {
 	params := c.Request.URL.Query()
 
+	// Check if we have the required parameters
+	if params.Get("lat") == "" || params.Get("lon") == "" {
+		log.Println("Missing required parameters")
+		return
+	}
+
 	soilChan := make(chan []byte)
 	weatherChan := make(chan []byte)
 	floodChan := make(chan []byte)
