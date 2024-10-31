@@ -1,0 +1,133 @@
+basePath: /
+definitions:
+  models.Deforestation:
+    properties:
+      daterange_tot_treeloss:
+        type: number
+    type: object
+  models.Flood:
+    properties:
+      intensity:
+        allOf:
+        - $ref: '#/definitions/models.IntensityEnum'
+        description: 'The flood intensity (indicated by color) relating to maximum
+          return period threshold exceedance probabilities over the forecast horizon.
+          P: Purple, maximum 20-year exceedance probability >=30%; R: Red, maximum
+          for 20-year <30% and 5-year >=30%; Y: Yellow, maximum for 5-year <30% and
+          2-year >=30%; G: Gray, no flood signal (2-year <30%).'
+      issued_on:
+        description: The date the summary forecast was issued on. The GloFAS hydrological
+          model is run every day at 00:00 UTC.
+        type: string
+      peak_day:
+        description: The date on which the flood peak is forecasted to occur, assuming
+          UTC timezone.
+        type: string
+      peak_step:
+        description: The step number at which the peak occurs, ranging from 1 to 30.
+        type: integer
+      peak_timing:
+        allOf:
+        - $ref: '#/definitions/models.PeakTimingEnum'
+        description: 'The timing of the flood peak indicated by border and grayed
+          colors. BB: Black border, peak forecasted within days 1-3. GC: Grayed color,
+          peak forecasted after day 10 with <30% probability of exceeding the 2-year
+          return period threshold in first 10 days. GB: Gray border, floods of some
+          severity in first 10 days and peak after day 3.'
+    type: object
+  models.IntensityEnum:
+    enum:
+    - P
+    - R
+    - "Y"
+    - G
+    type: string
+    x-enum-varnames:
+    - P
+    - R
+    - "Y"
+    - G
+  models.PeakTimingEnum:
+    enum:
+    - BB
+    - GC
+    - GB
+    type: string
+    x-enum-varnames:
+    - BB
+    - GC
+    - GB
+  models.Summary:
+    properties:
+      deforestation:
+        allOf:
+        - $ref: '#/definitions/models.Deforestation'
+        description: deforestation from 2001 to 2022 in the given coordinates.
+      flood:
+        allOf:
+        - $ref: '#/definitions/models.Flood'
+        description: Flood forecast in the given coordinates.
+      most_probable_soil_type:
+        description: The most probable soil type in the given coordinates.
+        type: string
+      weather:
+        allOf:
+        - $ref: '#/definitions/models.Weather'
+        description: Current weather and rain forecast in the given coordinates.
+    type: object
+  models.Weather:
+    properties:
+      air_temperature:
+        type: number
+      cloud_area_fraction:
+        type: number
+      precipitation_amount:
+        type: number
+      relative_humidity:
+        type: number
+      wind_from_direction:
+        type: number
+      wind_speed:
+        type: number
+      wind_speed_of_gust:
+        type: number
+    type: object
+externalDocs:
+  description: OpenAPI
+  url: https://swagger.io/resources/open-api/
+info:
+  contact: {}
+  description: This API is used to get aggregated data from Deforestation, Flood,
+    Weather and Soil APIs.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Agriculture API
+  version: 1.0.0
+paths:
+  /summary:
+    get:
+      description: Gets aggregated data from Deforestation, Flood, Weather and Soil
+        APIs. See the [API documentation](https://developer.openepi.io) for more information.
+      parameters:
+      - description: Latitude
+        in: query
+        name: lat
+        required: true
+        type: string
+      - description: Longitude
+        in: query
+        name: lon
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Summary'
+      summary: Get summary of agriculture data
+      tags:
+      - summary
+swagger: "2.0"
