@@ -11,12 +11,13 @@ import (
 	"net/url"
 )
 
-func Summary(c *gin.Context) (summary models.Summary) {
+func Summary(c *gin.Context) {
 	params := c.Request.URL.Query()
 
 	// Check if we have the required parameters
 	if params.Get("lat") == "" || params.Get("lon") == "" {
 		log.Println("Missing required parameters")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required parameters: lat and lon"})
 		return
 	}
 
@@ -35,14 +36,21 @@ func Summary(c *gin.Context) (summary models.Summary) {
 	floodData := <-floodChan
 	deforestationData := <-deforestationChan
 
-	return createSummary(soilData, weatherData, floodData, deforestationData)
+	summary, err := createSummary(soilData, weatherData, floodData, deforestationData)
+	if err != nil {
+		log.Println("Failed to create summary:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create summary"})
+		return
+	}
+
+	c.JSON(http.StatusOK, summary)
 }
 
-func getData(params url.Values, endpoint string) (body []byte) {
+func getData(params url.Values, endpoint string) []byte {
 	base, err := url.Parse(config.AppSettings.ApiBaseUrl)
 	if err != nil {
-		log.Println("Failed to parse base URL")
-		return
+		log.Println("Failed to parse base URL:", err)
+		return nil
 	}
 
 	base.Path += endpoint
@@ -54,48 +62,46 @@ func getData(params url.Values, endpoint string) (body []byte) {
 
 	resp, err := http.Get(base.String())
 	if err != nil {
-		log.Println("Failed to fetch data")
-		return
+		log.Println("Failed to fetch data from", endpoint, ":", err)
+		return nil
 	}
-
-	// Close the response body on function exit
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
-			log.Println("Failed to close response body")
-			return
+			log.Println("Failed to close response body from", endpoint, ":", err)
 		}
 	}(resp.Body)
 
-	body, err = io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		log.Println("Received non-OK response from", endpoint, ":", resp.Status)
+		return nil
+	}
+
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Println("Failed to read response body")
-		return
+		log.Println("Failed to read response body from", endpoint, ":", err)
+		return nil
 	}
 	return body
 }
 
-func createSummary(soilData, weatherData, floodData, deforestationData []byte) (summary models.Summary) {
+func createSummary(soilData, weatherData, floodData, deforestationData []byte) (models.Summary, error) {
 	var soil models.SoilTypeJSON
 	var weather models.METJSONForecast
 	var flood models.SummaryResponseModel
 	var deforestation models.DeforestationBasinGeoJSON
 
 	if err := json.Unmarshal(soilData, &soil); err != nil {
-		log.Println("Failed to unmarshal soil data:", err)
-		return
+		return models.Summary{}, err
 	}
 	if err := json.Unmarshal(weatherData, &weather); err != nil {
-		log.Println("Failed to unmarshal weather data:", err)
-		return
+		return models.Summary{}, err
 	}
 	if err := json.Unmarshal(floodData, &flood); err != nil {
-		log.Println("Failed to unmarshal flood data:", err)
-		return
+		return models.Summary{}, err
 	}
 	if err := json.Unmarshal(deforestationData, &deforestation); err != nil {
-		log.Println("Failed to unmarshal deforestation data:", err)
-		return
+		return models.Summary{}, err
 	}
 
 	var firstWeather models.ForecastTimeInstant
@@ -133,5 +139,5 @@ func createSummary(soilData, weatherData, floodData, deforestationData []byte) (
 		},
 	}
 
-	return body
+	return body, nil
 }
