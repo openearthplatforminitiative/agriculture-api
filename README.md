@@ -23,7 +23,13 @@ curl -i -X GET http://0.0.0.0:8080/agriculture/summary?lat=-1.9441&lon=30.0619
 ```
 
 ## Generating openapi spec
-First generate the swagger spec using the following command:
+To generate swagger spec, we use a tool called [swag](https://github.com/swaggo/swag).
+Install swag with the following command:
+```bash
+go install github.com/swaggo/swag/cmd/swag@latest
+```
+
+Generate the swagger spec using the following command:
 ```bash
 swag init -g ./cmd/app/main.go -o cmd/docs
 ```
