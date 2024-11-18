@@ -12,10 +12,8 @@ import (
 )
 
 func Summary(c *gin.Context) {
-	params := c.Request.URL.Query()
-
 	// Check if we have the required parameters
-	if params.Get("lat") == "" || params.Get("lon") == "" {
+	if c.Query("lat") == "" || c.Query("lon") == "" {
 		log.Println("Missing required parameters")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required parameters: lat and lon"})
 		return
@@ -26,10 +24,10 @@ func Summary(c *gin.Context) {
 	floodChan := make(chan []byte)
 	deforestationChan := make(chan []byte)
 
-	go func() { soilChan <- getData(params, "/soil/type") }()
-	go func() { weatherChan <- getData(params, "/weather/locationforecast") }()
-	go func() { floodChan <- getData(params, "/flood/summary") }()
-	go func() { deforestationChan <- getData(params, "/deforestation/basin") }()
+	go func() { soilChan <- getData(c, "/soil/type") }()
+	go func() { weatherChan <- getData(c, "/weather/locationforecast") }()
+	go func() { floodChan <- getData(c, "/flood/summary") }()
+	go func() { deforestationChan <- getData(c, "/deforestation/basin") }()
 
 	soilData := <-soilChan
 	weatherData := <-weatherChan
@@ -46,7 +44,7 @@ func Summary(c *gin.Context) {
 	c.JSON(http.StatusOK, summary)
 }
 
-func getData(params url.Values, endpoint string) []byte {
+func getData(c *gin.Context, endpoint string) []byte {
 	base, err := url.Parse(config.AppSettings.ApiBaseUrl)
 	if err != nil {
 		log.Println("Failed to parse base URL:", err)
@@ -56,8 +54,8 @@ func getData(params url.Values, endpoint string) []byte {
 	base.Path += endpoint
 
 	p := url.Values{}
-	p.Set("lat", params.Get("lat"))
-	p.Set("lon", params.Get("lon"))
+	p.Set("lat", c.Query("lat"))
+	p.Set("lon", c.Query("lon"))
 	base.RawQuery = p.Encode()
 
 	resp, err := http.Get(base.String())
