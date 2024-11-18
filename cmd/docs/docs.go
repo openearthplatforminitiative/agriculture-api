@@ -21,7 +21,7 @@ const docTemplate = `{
     "paths": {
         "/summary": {
             "get": {
-                "description": "Gets aggregated data from Deforestation, Flood, Weather and Soil APIs. See the [API documentation](https://developer.openepi.io) for more information.",
+                "description": "Gets aggregated data from Deforestation, Flood, Weather and Soil APIs. See the [API documentation](https://developer.openepi.io) for more information.\nThere is an error field for each of the APIs. If a certain API does not respond, it will instead return with an error message in the field that belong to that API.",
                 "produces": [
                     "application/json"
                 ],
@@ -62,39 +62,32 @@ const docTemplate = `{
             "properties": {
                 "daterange_tot_treeloss": {
                     "type": "number"
+                },
+                "error": {
+                    "type": "string"
                 }
             }
         },
         "models.Flood": {
             "type": "object",
             "properties": {
+                "error": {
+                    "type": "string"
+                },
                 "intensity": {
-                    "description": "The flood intensity (indicated by color) relating to maximum return period threshold exceedance probabilities over the forecast horizon. P: Purple, maximum 20-year exceedance probability \u003e=30%; R: Red, maximum for 20-year \u003c30% and 5-year \u003e=30%; Y: Yellow, maximum for 5-year \u003c30% and 2-year \u003e=30%; G: Gray, no flood signal (2-year \u003c30%).",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.IntensityEnum"
-                        }
-                    ]
+                    "$ref": "#/definitions/models.IntensityEnum"
                 },
                 "issued_on": {
-                    "description": "The date the summary forecast was issued on. The GloFAS hydrological model is run every day at 00:00 UTC.",
                     "type": "string"
                 },
                 "peak_day": {
-                    "description": "The date on which the flood peak is forecasted to occur, assuming UTC timezone.",
                     "type": "string"
                 },
                 "peak_step": {
-                    "description": "The step number at which the peak occurs, ranging from 1 to 30.",
                     "type": "integer"
                 },
                 "peak_timing": {
-                    "description": "The timing of the flood peak indicated by border and grayed colors. BB: Black border, peak forecasted within days 1-3. GC: Grayed color, peak forecasted after day 10 with \u003c30% probability of exceeding the 2-year return period threshold in first 10 days. GB: Gray border, floods of some severity in first 10 days and peak after day 3.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.PeakTimingEnum"
-                        }
-                    ]
+                    "$ref": "#/definitions/models.PeakTimingEnum"
                 }
             }
         },
@@ -126,6 +119,18 @@ const docTemplate = `{
                 "GB"
             ]
         },
+        "models.SoilType": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "most_probable_soil_type": {
+                    "description": "The most probable soil type at the queried location",
+                    "type": "string"
+                }
+            }
+        },
         "models.Summary": {
             "type": "object",
             "properties": {
@@ -145,9 +150,13 @@ const docTemplate = `{
                         }
                     ]
                 },
-                "most_probable_soil_type": {
+                "soil": {
                     "description": "The most probable soil type in the given coordinates.",
-                    "type": "string"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.SoilType"
+                        }
+                    ]
                 },
                 "weather": {
                     "description": "Current weather and rain forecast in the given coordinates.",
@@ -167,6 +176,9 @@ const docTemplate = `{
                 },
                 "cloud_area_fraction": {
                     "type": "number"
+                },
+                "error": {
+                    "type": "string"
                 },
                 "precipitation_amount": {
                     "type": "number"
