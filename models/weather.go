@@ -1,13 +1,14 @@
 package models
 
 type Weather struct {
-	AirTemperature      float32 `json:"air_temperature"`
-	CloudAreaFraction   float32 `json:"cloud_area_fraction"`
-	RelativeHumidity    float32 `json:"relative_humidity"`
-	WindFromDirection   float32 `json:"wind_from_direction"`
-	WindSpeed           float32 `json:"wind_speed"`
-	WindSpeedOfGust     float32 `json:"wind_speed_of_gust"`
-	PrecipitationAmount float32 `json:"precipitation_amount"`
+	AirTemperature      float32 `json:"air_temperature,omitempty"`
+	CloudAreaFraction   float32 `json:"cloud_area_fraction,omitempty"`
+	RelativeHumidity    float32 `json:"relative_humidity,omitempty"`
+	WindFromDirection   float32 `json:"wind_from_direction,omitempty"`
+	WindSpeed           float32 `json:"wind_speed,omitempty"`
+	WindSpeedOfGust     float32 `json:"wind_speed_of_gust,omitempty"`
+	PrecipitationAmount float32 `json:"precipitation_amount,omitempty"`
+	Error               string  `json:"error,omitempty"`
 }
 
 // Below is the structure of the JSON from the weather API.

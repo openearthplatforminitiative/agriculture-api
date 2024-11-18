@@ -13,5 +13,6 @@ type SoilTypeJSON struct {
 
 type SoilTypeInfo struct {
 	// The most probable soil type at the queried location
-	MostProbableSoilType string `json:"most_probable_soil_type"`
+	MostProbableSoilType string `json:"most_probable_soil_type,omitempty"`
+	Error                string `json:"error,omitempty"`
 }

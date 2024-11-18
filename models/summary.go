@@ -2,7 +2,7 @@ package models
 
 type Summary struct {
 	// The most probable soil type in the given coordinates.
-	MostProbableSoilType string `json:"most_probable_soil_type"`
+	Soil SoilType `json:"soil"`
 
 	// Current weather and rain forecast in the given coordinates.
 	Weather Weather `json:"weather"`

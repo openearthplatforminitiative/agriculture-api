@@ -1,6 +1,13 @@
 package models
 
-type Flood = SummaryProperties
+type Flood struct {
+	IssuedOn   string         `json:"issued_on,omitempty"`
+	PeakStep   int32          `json:"peak_step,omitempty"`
+	PeakDay    string         `json:"peak_day,omitempty"`
+	PeakTiming PeakTimingEnum `json:"peak_timing,omitempty"`
+	Intensity  IntensityEnum  `json:"intensity,omitempty"`
+	Error      string         `json:"error,omitempty"`
+}
 
 // Below is the structure of the JSON from the weather API.
 // It is only the sub-structure of the data.

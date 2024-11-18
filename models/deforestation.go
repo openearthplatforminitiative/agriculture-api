@@ -1,7 +1,8 @@
 package models
 
 type Deforestation struct {
-	DaterangeTotTreeloss float32 `json:"daterange_tot_treeloss"`
+	DaterangeTotTreeloss float32 `json:"daterange_tot_treeloss,omitempty"`
+	Error                string  `json:"error,omitempty"`
 }
 
 // Below is the structure of the JSON from the weather API.

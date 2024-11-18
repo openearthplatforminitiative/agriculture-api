@@ -34,12 +34,7 @@ func Summary(c *gin.Context) {
 	floodData := <-floodChan
 	deforestationData := <-deforestationChan
 
-	summary, err := createSummary(soilData, weatherData, floodData, deforestationData)
-	if err != nil {
-		log.Println("Failed to create summary:", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create summary"})
-		return
-	}
+	summary := createSummary(soilData, weatherData, floodData, deforestationData)
 
 	c.JSON(http.StatusOK, summary)
 }
@@ -83,46 +78,44 @@ func getData(c *gin.Context, endpoint string) []byte {
 	return body
 }
 
-func createSummary(soilData, weatherData, floodData, deforestationData []byte) (models.Summary, error) {
+func createSummary(soilData, weatherData, floodData, deforestationData []byte) models.Summary {
+	// Types from the APIs
 	var soil models.SoilTypeJSON
 	var weather models.METJSONForecast
 	var flood models.SummaryResponseModel
 	var deforestation models.DeforestationBasinGeoJSON
 
+	// The return types for the summary
+	var soilResult models.SoilType
+	var weatherResult models.Weather
+	var floodResult models.Flood
+	var deforestationResult models.Deforestation
+
 	if err := json.Unmarshal(soilData, &soil); err != nil {
-		return models.Summary{}, err
+		soilResult = models.SoilType{
+			Error: "Could not unmarshal soil data",
+		}
+		log.Println("Failed to unmarshal soil data:", err)
+	} else {
+		soilResult = models.SoilType{
+			MostProbableSoilType: soil.Properties.MostProbableSoilType,
+		}
 	}
+
 	if err := json.Unmarshal(weatherData, &weather); err != nil {
-		return models.Summary{}, err
-	}
-	if err := json.Unmarshal(floodData, &flood); err != nil {
-		return models.Summary{}, err
-	}
-	if err := json.Unmarshal(deforestationData, &deforestation); err != nil {
-		return models.Summary{}, err
-	}
+		weatherResult = models.Weather{
+			Error: "Could not unmarshal weather data",
+		}
+		log.Println("Failed to unmarshal weather data:", err)
+	} else {
+		var firstWeather models.ForecastTimeInstant
+		var precipitationAmount float32
 
-	var firstWeather models.ForecastTimeInstant
-	var precipitationAmount float32
-
-	if len(weather.Properties.Timeseries) > 0 {
-		firstWeather = weather.Properties.Timeseries[0].Data.Instant.Details
-		precipitationAmount = weather.Properties.Timeseries[0].Data.Next12Hours.Details.PrecipitationAmount
-	}
-
-	var firstFlood models.SummaryFeature
-	if len(flood.QueriedLocation.Features) > 0 {
-		firstFlood = flood.QueriedLocation.Features[0]
-	}
-
-	var firstDeforestation models.DeforestationBasinFeature
-	if len(deforestation.Features) > 0 {
-		firstDeforestation = deforestation.Features[0]
-	}
-
-	body := models.Summary{
-		MostProbableSoilType: soil.Properties.MostProbableSoilType,
-		Weather: models.Weather{
+		if len(weather.Properties.Timeseries) > 0 {
+			firstWeather = weather.Properties.Timeseries[0].Data.Instant.Details
+			precipitationAmount = weather.Properties.Timeseries[0].Data.Next12Hours.Details.PrecipitationAmount
+		}
+		weatherResult = models.Weather{
 			AirTemperature:      firstWeather.AirTemperature,
 			CloudAreaFraction:   firstWeather.CloudAreaFraction,
 			RelativeHumidity:    firstWeather.RelativeHumidity,
@@ -130,12 +123,49 @@ func createSummary(soilData, weatherData, floodData, deforestationData []byte) (
 			WindSpeed:           firstWeather.WindSpeed,
 			WindSpeedOfGust:     firstWeather.WindSpeedOfGust,
 			PrecipitationAmount: precipitationAmount,
-		},
-		Flood: firstFlood.Properties,
-		Deforestation: models.Deforestation{
-			DaterangeTotTreeloss: firstDeforestation.Properties.DaterangeTotTreeloss,
-		},
+		}
 	}
 
-	return body, nil
+	if err := json.Unmarshal(floodData, &flood); err != nil {
+		floodResult = models.Flood{
+			Error: "Could not unmarshal flood data",
+		}
+		log.Println("Failed to unmarshal flood data:", err)
+	} else {
+		var firstFlood models.SummaryFeature
+		if len(flood.QueriedLocation.Features) > 0 {
+			firstFlood = flood.QueriedLocation.Features[0]
+		}
+		floodResult = models.Flood{
+			IssuedOn:   firstFlood.Properties.IssuedOn,
+			PeakStep:   firstFlood.Properties.PeakStep,
+			PeakDay:    firstFlood.Properties.PeakDay,
+			PeakTiming: firstFlood.Properties.PeakTiming,
+			Intensity:  firstFlood.Properties.Intensity,
+		}
+	}
+
+	if err := json.Unmarshal(deforestationData, &deforestation); err != nil {
+		deforestationResult = models.Deforestation{
+			Error: "Could not unmarshal deforestation data",
+		}
+		log.Println("Failed to unmarshal deforestation data:", err)
+	} else {
+		var firstDeforestation models.DeforestationBasinFeature
+		if len(deforestation.Features) > 0 {
+			firstDeforestation = deforestation.Features[0]
+		}
+		deforestationResult = models.Deforestation{
+			DaterangeTotTreeloss: firstDeforestation.Properties.DaterangeTotTreeloss,
+		}
+	}
+
+	body := models.Summary{
+		Soil:          soilResult,
+		Weather:       weatherResult,
+		Flood:         floodResult,
+		Deforestation: deforestationResult,
+	}
+
+	return body
 }
