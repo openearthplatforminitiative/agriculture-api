@@ -113,12 +113,12 @@ paths:
         in: query
         name: lat
         required: true
-        type: string
+        type: number
       - description: Longitude
         in: query
         name: lon
         required: true
-        type: string
+        type: number
       produces:
       - application/json
       responses:

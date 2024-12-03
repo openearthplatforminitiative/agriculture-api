@@ -31,14 +31,14 @@ const docTemplate = `{
                 "summary": "Get summary of agriculture data",
                 "parameters": [
                     {
-                        "type": "string",
+                        "type": "number",
                         "description": "Latitude",
                         "name": "lat",
                         "in": "query",
                         "required": true
                     },
                     {
-                        "type": "string",
+                        "type": "number",
                         "description": "Longitude",
                         "name": "lon",
                         "in": "query",
