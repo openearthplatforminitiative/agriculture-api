@@ -55,19 +55,6 @@ spec:
     forceSlash: true
 ---
 apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: cors-agriculture
-spec:
-  headers:
-    accessControlAllowMethods:
-      - "GET"
-    accessControlAllowHeaders:
-      - "*"
-    accessControlAllowOriginList:
-      - "*"
----
-apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: agriculture-api
@@ -75,12 +62,24 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - kind: Rule
-      match: PathPrefix(`/agriculture`) && !PathPrefix(`/agriculture/metrics`)
-      services:
-        - kind: Service
-          name: agriculture-api
-          port: 80
-      middlewares:
-        - name: stripprefix-agriculture
-        - name: cors-agriculture
+  - kind: Rule
+    match: PathPrefix(`/agriculture`) && !PathPrefix(`/agriculture/metrics`) && HeadersRegexp(`Authorization`, `.+`)
+    services:
+    - kind: Service
+      name: agriculture-api
+      port: 80
+    middlewares:
+    - name: stripprefix-agriculture
+    - name: traefikmiddleware-cors@kubernetescrd
+    - name: traefikmiddleware-jwt@kubernetescrd
+    - name: traefikmiddleware-rate-limit-registered@kubernetescrd
+  - kind: Rule
+    match: PathPrefix(`/agriculture`) && !PathPrefix(`/agriculture/metrics`) && !HeadersRegexp(`Authorization`, `.+`)
+    services:
+    - kind: Service
+      name: agriculture-api
+      port: 80
+    middlewares:
+    - name: stripprefix-agriculture
+    - name: traefikmiddleware-cors@kubernetescrd
+    - name: traefikmiddleware-rate-limit-anonymous@kubernetescrd
