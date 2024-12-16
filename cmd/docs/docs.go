@@ -19,6 +19,26 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/ready": {
+            "get": {
+                "description": "Performs health checks on various endpoints and returns their status.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system"
+                ],
+                "summary": "Check if the service is ready",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.HealthCheckResultSummary"
+                        }
+                    }
+                }
+            }
+        },
         "/summary": {
             "get": {
                 "description": "Gets aggregated data from Deforestation, Flood, Weather and Soil APIs. See the [API documentation](https://developer.openepi.io) for more information.\nThere is an error field for each of the APIs. If a certain API does not respond, it will instead return with an error message in the field that belong to that API.",
@@ -88,6 +108,31 @@ const docTemplate = `{
                 },
                 "peak_timing": {
                     "$ref": "#/definitions/models.PeakTimingEnum"
+                }
+            }
+        },
+        "models.HealthCheckResult": {
+            "type": "object",
+            "properties": {
+                "endpoint": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.HealthCheckResultSummary": {
+            "type": "object",
+            "properties": {
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.HealthCheckResult"
+                    }
                 }
             }
         },

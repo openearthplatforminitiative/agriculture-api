@@ -20,6 +20,27 @@
     }
   ],
   "paths": {
+    "/ready": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Check if the service is ready",
+        "description": "Performs health checks on various endpoints and returns their status.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/models.HealthCheckResultSummary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/summary": {
       "get": {
         "tags": [
@@ -95,6 +116,31 @@
           },
           "peak_timing": {
             "$ref": "#/components/schemas/models.PeakTimingEnum"
+          }
+        }
+      },
+      "models.HealthCheckResult": {
+        "type": "object",
+        "properties": {
+          "endpoint": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "models.HealthCheckResultSummary": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/models.HealthCheckResult"
+            }
           }
         }
       },

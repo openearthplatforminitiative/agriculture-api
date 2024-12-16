@@ -4,56 +4,45 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/openearthplatforminitiative/agriculture-api/config"
+	"github.com/openearthplatforminitiative/agriculture-api/models"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
-	"sync"
 )
 
 func Ready(c *gin.Context) {
-	endpoints := []string{
-		"/soil",
-		"/weather",
-		"/flood",
-		"/deforestation",
-	}
+	soilChan := make(chan models.HealthCheckResult)
+	weatherChan := make(chan models.HealthCheckResult)
+	floodChan := make(chan models.HealthCheckResult)
+	deforestationChan := make(chan models.HealthCheckResult)
 
-	var wg sync.WaitGroup
-	var mu sync.Mutex
-	var failed bool
+	go func() { soilChan <- getHealth("/soil") }()
+	go func() { weatherChan <- getHealth("/weather") }()
+	go func() { floodChan <- getHealth("/flood") }()
+	go func() { deforestationChan <- getHealth("/deforestation") }()
 
-	for _, endpoint := range endpoints {
-		wg.Add(1)
-		go func(endpoint string) {
-			defer wg.Done()
-			if !checkHealth(getHealth(endpoint)) {
-				mu.Lock()
-				failed = true
-				mu.Unlock()
-			}
-		}(endpoint)
-	}
+	soilData := <-soilChan
+	weatherData := <-weatherChan
+	floodData := <-floodChan
+	deforestationData := <-deforestationChan
 
-	wg.Wait()
+	results := []models.HealthCheckResult{soilData, weatherData, floodData, deforestationData}
 
-	if failed {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"message": "Some endpoints are not ready"})
-	} else {
-		c.JSON(http.StatusOK, gin.H{"message": "The service is ready"})
-	}
+	c.JSON(http.StatusOK, models.HealthCheckResultSummary{Results: results})
 }
 
-func getHealth(endpoint string) []byte {
+func getHealth(endpoint string) models.HealthCheckResult {
 	base, err := url.Parse(config.AppSettings.ApiBaseUrl + endpoint + "/ready")
 	if err != nil {
 		log.Println("Failed to parse base URL:", err)
+		return models.HealthCheckResult{Endpoint: endpoint, Status: "failed", Error: err.Error()}
 	}
 
 	resp, err := http.Get(base.String())
 	if err != nil {
 		log.Println("Failed to call", endpoint, ":", err)
-		return nil
+		return models.HealthCheckResult{Endpoint: endpoint, Status: "failed", Error: err.Error()}
 	}
 
 	defer func(Body io.ReadCloser) {
@@ -65,29 +54,25 @@ func getHealth(endpoint string) []byte {
 
 	if resp.StatusCode != http.StatusOK {
 		log.Println("Received non-OK response from", endpoint, ":", resp.Status)
-		return nil
+		return models.HealthCheckResult{Endpoint: endpoint, Status: "failed", Error: resp.Status}
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Println("Failed to read response body from", endpoint, ":", err)
-		return nil
+		return models.HealthCheckResult{Endpoint: endpoint, Status: "failed", Error: err.Error()}
 	}
 
-	return body
-}
-
-type HealthResponse struct {
-	Hostname string `json:"hostname"`
-	Status   string `json:"status"`
-}
-
-func checkHealth(body []byte) bool {
-	var response HealthResponse
-	err := json.Unmarshal(body, &response)
+	var response models.HealthResponse
+	err = json.Unmarshal(body, &response)
 	if err != nil {
 		log.Println("Failed to unmarshal JSON:", err)
+		return models.HealthCheckResult{Endpoint: endpoint, Status: "failed", Error: err.Error()}
 	}
 
-	return response.Status == "success"
+	if response.Status != "success" {
+		return models.HealthCheckResult{Endpoint: endpoint, Status: "failed", Error: "Non-success status"}
+	}
+
+	return models.HealthCheckResult{Endpoint: endpoint, Status: "success"}
 }

@@ -22,6 +22,22 @@ definitions:
       peak_timing:
         $ref: '#/definitions/models.PeakTimingEnum'
     type: object
+  models.HealthCheckResult:
+    properties:
+      endpoint:
+        type: string
+      error:
+        type: string
+      status:
+        type: string
+    type: object
+  models.HealthCheckResultSummary:
+    properties:
+      results:
+        items:
+          $ref: '#/definitions/models.HealthCheckResult'
+        type: array
+    type: object
   models.IntensityEnum:
     enum:
     - P
@@ -103,6 +119,19 @@ info:
   title: Agriculture API
   version: 1.0.0
 paths:
+  /ready:
+    get:
+      description: Performs health checks on various endpoints and returns their status.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.HealthCheckResultSummary'
+      summary: Check if the service is ready
+      tags:
+      - system
   /summary:
     get:
       description: |-
