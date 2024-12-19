@@ -1,0 +1,260 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Agriculture API",
+    "description": "This API is used to get aggregated data from Deforestation, Flood, Weather and Soil APIs.",
+    "contact": {},
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "version": "1.0.0"
+  },
+  "externalDocs": {
+    "description": "OpenAPI",
+    "url": "https://swagger.io/resources/open-api/"
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "paths": {
+    "/ready": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Check if the service is ready",
+        "description": "Performs health checks on various endpoints and returns their status.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/models.HealthCheckResultSummary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/summary": {
+      "get": {
+        "tags": [
+          "summary"
+        ],
+        "summary": "Get summary of agriculture data",
+        "description": "Gets aggregated data from Deforestation, Flood, Weather and Soil APIs. See the [API documentation](https://developer.openepi.io) for more information.\nThere is an error field for each of the APIs. If a certain API does not respond, it will instead return with an error message in the field that belong to that API.",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "description": "Latitude",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "description": "Longitude",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/models.Summary"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "models.Deforestation": {
+        "type": "object",
+        "properties": {
+          "daterange_tot_treeloss": {
+            "type": "number"
+          },
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "models.Flood": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "intensity": {
+            "$ref": "#/components/schemas/models.IntensityEnum"
+          },
+          "issued_on": {
+            "type": "string"
+          },
+          "peak_day": {
+            "type": "string"
+          },
+          "peak_step": {
+            "type": "integer"
+          },
+          "peak_timing": {
+            "$ref": "#/components/schemas/models.PeakTimingEnum"
+          }
+        }
+      },
+      "models.HealthCheckResult": {
+        "type": "object",
+        "properties": {
+          "endpoint": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "models.HealthCheckResultSummary": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/models.HealthCheckResult"
+            }
+          }
+        }
+      },
+      "models.IntensityEnum": {
+        "type": "string",
+        "enum": [
+          "P",
+          "R",
+          "Y",
+          "G"
+        ],
+        "x-enum-varnames": [
+          "P",
+          "R",
+          "Y",
+          "G"
+        ]
+      },
+      "models.PeakTimingEnum": {
+        "type": "string",
+        "enum": [
+          "BB",
+          "GC",
+          "GB"
+        ],
+        "x-enum-varnames": [
+          "BB",
+          "GC",
+          "GB"
+        ]
+      },
+      "models.SoilType": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "most_probable_soil_type": {
+            "type": "string",
+            "description": "The most probable soil type at the queried location"
+          }
+        }
+      },
+      "models.Summary": {
+        "type": "object",
+        "properties": {
+          "deforestation": {
+            "type": "object",
+            "description": "deforestation from 2001 to 2022 in the given coordinates.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/models.Deforestation"
+              }
+            ]
+          },
+          "flood": {
+            "type": "object",
+            "description": "Flood forecast in the given coordinates.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/models.Flood"
+              }
+            ]
+          },
+          "soil": {
+            "type": "object",
+            "description": "The most probable soil type in the given coordinates.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/models.SoilType"
+              }
+            ]
+          },
+          "weather": {
+            "type": "object",
+            "description": "Current weather and rain forecast in the given coordinates.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/models.Weather"
+              }
+            ]
+          }
+        }
+      },
+      "models.Weather": {
+        "type": "object",
+        "properties": {
+          "air_temperature": {
+            "type": "number"
+          },
+          "cloud_area_fraction": {
+            "type": "number"
+          },
+          "error": {
+            "type": "string"
+          },
+          "precipitation_amount": {
+            "type": "number"
+          },
+          "relative_humidity": {
+            "type": "number"
+          },
+          "wind_from_direction": {
+            "type": "number"
+          },
+          "wind_speed": {
+            "type": "number"
+          },
+          "wind_speed_of_gust": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  },
+  "x-original-swagger-version": "2.0"
+}

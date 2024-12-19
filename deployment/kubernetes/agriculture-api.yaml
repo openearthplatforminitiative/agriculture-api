@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agriculture-api
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: agriculture-api
+  template:
+    metadata:
+      labels:
+        app: agriculture-api
+#      annotations:
+#        prometheus.io/scrape: "true"
+#        prometheus.io/port: "8080"
+#        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - image: ghcr.io/openearthplatforminitiative/agriculture-api:latest
+          name: agriculture-api
+          ports:
+            - containerPort: 8080
+          env:
+            - name: API_ROOT_PATH
+              value: "/agriculture"
+            - name: VERSION
+              value: "latest"
+            - name: API_DOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  name: openepi-apps-config
+                  key: api_domain
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agriculture-api
+spec:
+  ports:
+    - port: 80
+      targetPort: 8080
+  selector:
+    app: agriculture-api
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: stripprefix-agriculture
+spec:
+  stripPrefix:
+    prefixes:
+      - /agriculture
+    forceSlash: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: agriculture-api
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - kind: Rule
+    match: PathPrefix(`/agriculture`) && !PathPrefix(`/agriculture/metrics`) && HeadersRegexp(`Authorization`, `.+`)
+    services:
+    - kind: Service
+      name: agriculture-api
+      port: 80
+    middlewares:
+    - name: stripprefix-agriculture
+    - name: traefikmiddleware-cors@kubernetescrd
+    - name: traefikmiddleware-jwt@kubernetescrd
+    - name: traefikmiddleware-rate-limit-registered@kubernetescrd
+  - kind: Rule
+    match: PathPrefix(`/agriculture`) && !PathPrefix(`/agriculture/metrics`) && !HeadersRegexp(`Authorization`, `.+`)
+    services:
+    - kind: Service
+      name: agriculture-api
+      port: 80
+    middlewares:
+    - name: stripprefix-agriculture
+    - name: traefikmiddleware-cors@kubernetescrd
+    - name: traefikmiddleware-rate-limit-anonymous@kubernetescrd
