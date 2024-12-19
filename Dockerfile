@@ -3,8 +3,10 @@ WORKDIR /go/src/app
 COPY go.mod .
 COPY go.sum .
 COPY cmd cmd
-COPY internal internal
-EXPOSE 8080
+COPY config config
+COPY handlers handlers
+COPY models models
+COPY routes routes
 
 RUN go build -o main cmd/app/main.go
 
