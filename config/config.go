@@ -46,7 +46,7 @@ func Setup() {
 	AppSettings = &Config{
 		Version:        getEnv("VERSION", "0.0.1"),
 		ServerBindPort: getEnvInt("SERVER_BIND_PORT", 8080),
-		ServerBindHost: getEnv("SERVER_BIND_HOST", "127.0.0.1"),
+		ServerBindHost: getEnv("SERVER_BIND_HOST", "0.0.0.0"),
 		ApiRootPath:    getEnv("API_ROOT_PATH", ""),
 		ApiBaseUrl:     getEnv("API_BASE_URL", "https://api.openepi.io"),
 	}
