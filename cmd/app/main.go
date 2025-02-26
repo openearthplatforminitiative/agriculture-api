@@ -43,7 +43,7 @@ func main() {
 	//Redoc endpoint
 	router.GET("/redoc", func(c *gin.Context) {
 		opts := middleware.RedocOpts{
-			SpecURL: "/cmd/docs/swagger.json",
+			SpecURL: config.AppSettings.ApiRootPath + "/cmd/docs/swagger.json",
 			Path:    "/redoc",
 		}
 		sh := middleware.Redoc(opts, nil)
